@@ -1,0 +1,10 @@
+{
+  "name": "crisisSync-root",
+  "private": true,
+  "scripts": {
+    "start": "cd mobile && npm start",
+    "android": "cd mobile && npm run android",
+    "ios": "cd mobile && npm run ios",
+    "web": "cd mobile && npm run web"
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "expo": {
+    "name": "CrisisSync",
+    "slug": "crisis-sync",
+    "scheme": "crisis-sync",
+    "platforms": ["ios", "android", "web"],
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "assetBundlePatterns": ["**/*"]
+  }
+}
