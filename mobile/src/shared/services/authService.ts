@@ -3,11 +3,7 @@ import { getCurrentSession, supabase } from './supabase';
 export async function getUserRole() {
   const session = await getCurrentSession();
 
-  console.log("🔐 CURRENT AUTH USER UID:", session?.user?.id);
-  console.log("📧 CURRENT AUTH EMAIL:", session?.user?.email);
-
   if (!session?.user?.id) {
-    console.log("❌ No logged-in user");
     return null;
   }
 
@@ -16,9 +12,6 @@ export async function getUserRole() {
     .select('role, is_admin')
     .eq('id', session.user.id)
     .maybeSingle();
-
-  console.log("👤 PROFILE RESULT:", data);
-  console.log("❌ PROFILE ERROR:", error);
 
   if (error) {
     throw error;

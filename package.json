@@ -6,5 +6,16 @@
     "android": "cd mobile && npm run android",
     "ios": "cd mobile && npm run ios",
     "web": "cd mobile && npm run web"
+  },
+  "version": "1.0.0",
+  "dependencies": {
+    "expo": "~57.0.7",
+    "react": "19.2.3",
+    "react-native": "0.86.0"
+  },
+  "devDependencies": {
+    "@types/react": "~19.2.4",
+    "supabase": "^2.116.0",
+    "typescript": "~6.0.3"
   }
 }

@@ -33,32 +33,99 @@ alter table public.incident_audit_logs enable row level security;
 alter table public.incident_evidence enable row level security;
 
 -- Policies for Audit Logs
-DO $$
-BEGIN
-  CREATE POLICY audit_logs_insert_authenticated ON public.incident_audit_logs
-    FOR INSERT WITH CHECK (auth.role() = 'authenticated');
-EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+drop policy if exists audit_logs_insert_authenticated on public.incident_audit_logs;
+drop policy if exists audit_logs_select_authenticated on public.incident_audit_logs;
 
-DO $$
-BEGIN
-  CREATE POLICY audit_logs_select_authenticated ON public.incident_audit_logs
-    FOR SELECT USING (auth.role() = 'authenticated');
-EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+create policy audit_logs_insert_authenticated on public.incident_audit_logs
+  for insert to authenticated
+  with check (
+    auth.uid() is not null
+    and (
+      actor_id = auth.uid()
+      or exists (
+        select 1
+        from public.profiles p
+        where p.id = auth.uid() and p.is_admin = true
+      )
+    )
+  );
+
+create policy audit_logs_select_authenticated on public.incident_audit_logs
+  for select to authenticated
+  using (
+    exists (
+      select 1
+      from public.profiles p
+      where p.id = auth.uid() and p.is_admin = true
+    )
+    or exists (
+      select 1
+      from public.incidents i
+      where i.id = incident_audit_logs.incident_id
+        and i.user_id = auth.uid()
+    )
+  );
 
 -- Policies for Evidence
-DO $$
-BEGIN
-  CREATE POLICY evidence_insert_authenticated ON public.incident_evidence
-    FOR INSERT WITH CHECK (auth.role() = 'authenticated');
-EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+drop policy if exists evidence_insert_authenticated on public.incident_evidence;
+drop policy if exists evidence_select_authenticated on public.incident_evidence;
+drop policy if exists evidence_delete_authenticated on public.incident_evidence;
 
-DO $$
-BEGIN
-  CREATE POLICY evidence_select_authenticated ON public.incident_evidence
-    FOR SELECT USING (auth.role() = 'authenticated');
-EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+create policy evidence_insert_authenticated on public.incident_evidence
+  for insert to authenticated
+  with check (
+    exists (
+      select 1
+      from public.incidents i
+      where i.id = incident_evidence.incident_id
+        and (
+          i.user_id = auth.uid()
+          or exists (
+            select 1
+            from public.profiles p
+            where p.id = auth.uid() and p.is_admin = true
+          )
+        )
+    )
+    and uploaded_by = auth.uid()
+  );
+
+create policy evidence_select_authenticated on public.incident_evidence
+  for select to authenticated
+  using (
+    exists (
+      select 1
+      from public.incidents i
+      where i.id = incident_evidence.incident_id
+        and (
+          i.user_id = auth.uid()
+          or exists (
+            select 1
+            from public.profiles p
+            where p.id = auth.uid() and p.is_admin = true
+          )
+        )
+    )
+  );
+
+create policy evidence_delete_authenticated on public.incident_evidence
+  for delete to authenticated
+  using (
+    exists (
+      select 1
+      from public.incidents i
+      where i.id = incident_evidence.incident_id
+        and (
+          i.user_id = auth.uid()
+          or exists (
+            select 1
+            from public.profiles p
+            where p.id = auth.uid() and p.is_admin = true
+          )
+        )
+    )
+  );
 
 -- 3. Storage Bucket Configuration (Run manually if this fails due to permissions)
 -- insert into storage.buckets (id, name, public) values ('incident-evidence', 'incident-evidence', false) on conflict do nothing;
--- create policy if not exists "Authenticated users can upload evidence" on storage.objects for insert with check ( bucket_id = 'incident-evidence' and auth.role() = 'authenticated' );
--- create policy if not exists "Authenticated users can read evidence" on storage.objects for select using ( bucket_id = 'incident-evidence' and auth.role() = 'authenticated' );
+-- Storage object policies are defined in phase4.6_storage_migration.sql.

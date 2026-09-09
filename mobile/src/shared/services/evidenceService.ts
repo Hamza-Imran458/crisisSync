@@ -247,8 +247,24 @@ export const evidenceService = {
 
   deleteIncidentEvidence: async (evidenceId: string, filePath?: string): Promise<boolean> => {
     try {
-      if (filePath) {
-        const { error: storageError } = await supabase.storage.from('incident-evidence').remove([filePath]);
+      const { data: evidenceRecord, error: evidenceFetchError } = await supabase
+        .from('incident_evidence')
+        .select('incident_id, file_path')
+        .eq('id', evidenceId)
+        .maybeSingle();
+
+      if (evidenceFetchError) {
+        logger.error('evidenceService: Error fetching evidence before deletion', evidenceFetchError);
+        throw evidenceFetchError;
+      }
+
+      if (!evidenceRecord?.incident_id) {
+        throw new Error('Evidence record not found.');
+      }
+
+      const resolvedFilePath = filePath || evidenceRecord.file_path;
+      if (resolvedFilePath) {
+        const { error: storageError } = await supabase.storage.from('incident-evidence').remove([resolvedFilePath]);
         if (storageError) {
           logger.warn('evidenceService: storage delete failed', storageError);
         }
@@ -261,9 +277,9 @@ export const evidenceService = {
       }
 
       await auditService.logIncidentEvent({
-        incidentId: evidenceId,
+        incidentId: evidenceRecord.incident_id,
         eventType: 'EVIDENCE_REMOVED',
-        note: filePath ? `Evidence removed from storage: ${filePath}` : 'Evidence removed',
+        note: resolvedFilePath ? `Evidence removed from storage: ${resolvedFilePath}` : 'Evidence removed',
       });
 
       return true;

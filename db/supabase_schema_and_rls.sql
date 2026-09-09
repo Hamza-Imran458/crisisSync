@@ -54,54 +54,65 @@ alter table public.incidents enable row level security;
 alter table public.alerts enable row level security;
 
 -- Profiles policies
-create policy if not exists profiles_insert_authenticated on public.profiles
+drop policy if exists profiles_insert_authenticated on public.profiles;
+create policy profiles_insert_authenticated on public.profiles
   for insert using (auth.role() = 'authenticated');
 
-create policy if not exists profiles_select_authenticated on public.profiles
+drop policy if exists profiles_select_authenticated on public.profiles;
+create policy profiles_select_authenticated on public.profiles
   for select using (true);
 
-create policy if not exists profiles_update_owner_or_admin on public.profiles
+drop policy if exists profiles_update_owner_or_admin on public.profiles;
+create policy profiles_update_owner_or_admin on public.profiles
   for update using (
     auth.uid() = id
     or exists (select 1 from public.profiles p where p.id = auth.uid() and p.is_admin = true)
   );
 
 -- Incidents policies
-create policy if not exists incidents_insert_authenticated on public.incidents
+drop policy if exists incidents_insert_authenticated on public.incidents;
+create policy incidents_insert_authenticated on public.incidents
   for insert with check (
     auth.role() = 'authenticated' and (user_id = auth.uid() or user_id is null)
   );
 
-create policy if not exists incidents_select_authenticated on public.incidents
+drop policy if exists incidents_select_authenticated on public.incidents;
+create policy incidents_select_authenticated on public.incidents
   for select using (true);
 
-create policy if not exists incidents_update_owner_or_admin on public.incidents
+drop policy if exists incidents_update_owner_or_admin on public.incidents;
+create policy incidents_update_owner_or_admin on public.incidents
   for update using (
     user_id = auth.uid()
     or exists (select 1 from public.profiles p where p.id = auth.uid() and p.is_admin = true)
   );
 
-create policy if not exists incidents_delete_owner_or_admin on public.incidents
+drop policy if exists incidents_delete_owner_or_admin on public.incidents;
+create policy incidents_delete_owner_or_admin on public.incidents
   for delete using (
     user_id = auth.uid()
     or exists (select 1 from public.profiles p where p.id = auth.uid() and p.is_admin = true)
   );
 
 -- Alerts policies
-create policy if not exists alerts_select_authenticated on public.alerts
+drop policy if exists alerts_select_authenticated on public.alerts;
+create policy alerts_select_authenticated on public.alerts
   for select using (true);
 
-create policy if not exists alerts_insert_admin on public.alerts
+drop policy if exists alerts_insert_admin on public.alerts;
+create policy alerts_insert_admin on public.alerts
   for insert using (
     exists (select 1 from public.profiles p where p.id = auth.uid() and p.is_admin = true)
   );
 
-create policy if not exists alerts_update_admin on public.alerts
+drop policy if exists alerts_update_admin on public.alerts;
+create policy alerts_update_admin on public.alerts
   for update using (
     exists (select 1 from public.profiles p where p.id = auth.uid() and p.is_admin = true)
   );
 
-create policy if not exists alerts_delete_admin on public.alerts
+drop policy if exists alerts_delete_admin on public.alerts;
+create policy alerts_delete_admin on public.alerts
   for delete using (
     exists (select 1 from public.profiles p where p.id = auth.uid() and p.is_admin = true)
   );

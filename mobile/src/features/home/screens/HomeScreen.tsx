@@ -36,8 +36,6 @@ export function HomeScreen() {
    */
   async function loadIncidents() {
     try {
-      console.log('📥 Loading Home Incidents...');
-
       const data = await fetchIncidentsFromDb();
       const location = await getUserLocationForApp();
 
@@ -84,7 +82,6 @@ export function HomeScreen() {
 
       setIncidents(sortedIncidents);
     } catch (error) {
-      console.log('❌ Home Fetch Error:', error);
       setLocationState('unavailable');
     } finally {
       setLoading(false);
@@ -92,14 +89,7 @@ export function HomeScreen() {
   }
 
   useEffect(() => {
-    console.log('🏠 Home Screen Started');
-
-    // Initial database load
     loadIncidents();
-
-    console.log(
-      '🔌 Starting Home Realtime Subscription'
-    );
 
     const channel = subscribeToIncidents(
 
@@ -111,19 +101,8 @@ export function HomeScreen() {
        * New incident has been created.
        */
       (newIncident) => {
-        console.log(
-          '🟢 Home INSERT:',
-          newIncident
-        );
-
-        // Don't show Pending incidents
         const normalizedStatus = normalizeIncidentStatus(newIncident.status as string | undefined);
         if (normalizedStatus !== 'VERIFIED' && normalizedStatus !== 'ACTIVE') {
-          console.log(
-            '⏳ Incident is not verified yet:',
-            newIncident.id
-          );
-
           return;
         }
 
@@ -162,11 +141,6 @@ export function HomeScreen() {
        * Pending → Verified
        */
       (updatedIncident) => {
-        console.log(
-          '🔵 Home UPDATE:',
-          updatedIncident
-        );
-
         setIncidents((current) => {
 
           /**
@@ -233,11 +207,6 @@ export function HomeScreen() {
        * DELETE
        */
       (deletedIncident) => {
-        console.log(
-          '🔴 Home DELETE:',
-          deletedIncident
-        );
-
         setIncidents((current) =>
           current.filter(
             (incident) =>
@@ -252,10 +221,6 @@ export function HomeScreen() {
      * Cleanup realtime subscription
      */
     return () => {
-      console.log(
-        '🔌 Removing Home Realtime Subscription'
-      );
-
       supabase.removeChannel(channel);
     };
   }, []);

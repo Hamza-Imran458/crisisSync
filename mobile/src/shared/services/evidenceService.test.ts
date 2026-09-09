@@ -89,4 +89,43 @@ describe('evidenceService business logic', () => {
       note: 'Verified by administrator',
     });
   });
+
+  it('records the owning incident when evidence is deleted', async () => {
+    const query = {
+      select: jest.fn().mockReturnThis(),
+      eq: jest.fn().mockReturnThis(),
+      maybeSingle: jest.fn().mockResolvedValue({
+        data: { incident_id: 'incident-456', file_path: 'incident-456/photo.jpg' },
+        error: null,
+      }),
+      delete: jest.fn(),
+    };
+    query.delete.mockReturnValue({
+      eq: jest.fn().mockResolvedValue({ error: null }),
+    });
+    (supabase.from as jest.Mock).mockReturnValue(query);
+    (supabase.storage.from as jest.Mock).mockReturnValue({
+      remove: jest.fn().mockResolvedValue({ error: null }),
+    });
+
+    await expect(evidenceService.deleteIncidentEvidence('evidence-123')).resolves.toBe(true);
+
+    expect(auditService.logIncidentEvent).toHaveBeenCalledWith({
+      incidentId: 'incident-456',
+      eventType: 'EVIDENCE_REMOVED',
+      note: 'Evidence removed from storage: incident-456/photo.jpg',
+    });
+  });
+
+  it('fails safely when the evidence record cannot be retrieved', async () => {
+    const query = {
+      select: jest.fn().mockReturnThis(),
+      eq: jest.fn().mockReturnThis(),
+      maybeSingle: jest.fn().mockResolvedValue({ data: null, error: new Error('lookup failed') }),
+    };
+    (supabase.from as jest.Mock).mockReturnValue(query);
+
+    await expect(evidenceService.deleteIncidentEvidence('evidence-123')).resolves.toBe(false);
+    expect(auditService.logIncidentEvent).not.toHaveBeenCalled();
+  });
 });

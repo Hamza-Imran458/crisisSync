@@ -79,11 +79,7 @@ export function AppStoreProvider({
   const [profile, setProfile] = useState<Profile>(defaultProfile);
   const [profileLoading, setProfileLoading] = useState(false);
 
-  console.log('[DEBUG] AppStoreProvider mounted');
-
   React.useEffect(() => {
-    console.log('[DEBUG] AppStoreProvider effect started');
-
     let mounted = true;
 
     // ============================================
@@ -91,21 +87,14 @@ export function AppStoreProvider({
     // ============================================
 
     async function loadIncidents() {
-      console.log('📥 AppStore: Fetching incidents...');
-
       try {
         const incidentData = await fetchIncidentsFromDb();
 
         if (mounted) {
           setIncidents(incidentData);
 
-          console.log(
-            '✅ AppStore incidents state updated:',
-            incidentData.length
-          );
         }
       } catch (error) {
-        console.log('❌ AppStore incident load error:', error);
       }
     }
 
@@ -114,8 +103,6 @@ export function AppStoreProvider({
     // ============================================
 
     async function loadAlerts() {
-      console.log('📥 AppStore: Fetching alerts...');
-
       if (mounted) {
         setAlertsLoading(true);
         setAlertsError(null);
@@ -127,14 +114,8 @@ export function AppStoreProvider({
         if (mounted) {
           setAlerts(alertData);
 
-          console.log(
-            '✅ AppStore alerts state updated:',
-            alertData.length
-          );
         }
       } catch (error: any) {
-        console.log('❌ AppStore alert load error:', error);
-
         if (mounted) {
           setAlertsError(
             error?.message ?? 'Unable to load alerts.'
@@ -158,10 +139,8 @@ export function AppStoreProvider({
           const normalizedRole = role ?? 'citizen';
           setUserRole(normalizedRole);
           setIsAdmin(normalizedRole === 'admin' || normalizedRole === 'operator' || Boolean(profile?.role === 'admin'));
-          console.log('👤 AppStore user role loaded:', normalizedRole);
         }
       } catch (error) {
-        console.log('❌ AppStore role load error:', error);
         if (mounted) {
           setUserRole('citizen');
           setIsAdmin(false);
@@ -175,10 +154,8 @@ export function AppStoreProvider({
         const fetchedProfile = await profileService.fetchUserProfile();
         if (mounted && fetchedProfile) {
           setProfile(fetchedProfile);
-          console.log('👤 AppStore profile loaded:', fetchedProfile.name);
         }
       } catch (error) {
-        console.log('❌ AppStore profile load error:', error);
       } finally {
         if (mounted) setProfileLoading(false);
       }
@@ -189,10 +166,8 @@ export function AppStoreProvider({
         const mine = await fetchMyIncidents();
         if (mounted) {
           setMyIncidents(mine);
-          console.log('📋 AppStore my incidents loaded:', mine.length);
         }
       } catch (error) {
-        console.log('❌ AppStore my incidents load error:', error);
       }
     }
 
@@ -201,19 +176,12 @@ export function AppStoreProvider({
     // ============================================
 
     async function loadInitialData() {
-      console.log('🚀 AppStore initial data loading...');
-
       await loadIncidents();
 
       // Check whether a user is already authenticated.
       const {
         data: { session: currentSession },
       } = await supabase.auth.getSession();
-
-      console.log(
-        '🔐 AppStore initial session:',
-        currentSession ? 'USER LOGGED IN' : 'NO USER'
-      );
 
       if (mounted) {
         setSession(currentSession);
@@ -227,9 +195,6 @@ export function AppStoreProvider({
           loadMyIncidents(),
         ]);
       } else {
-        console.log(
-          '⏳ No authenticated user yet. Alerts will load after login.'
-        );
       }
 
       // Auth state is now known — release loading gate
@@ -242,9 +207,6 @@ export function AppStoreProvider({
 
     function startAlertSubscription() {
       if (alertChannel) {
-        console.log(
-          '⚠️ Alert subscription already active.'
-        );
         return;
       }
 
@@ -253,11 +215,6 @@ export function AppStoreProvider({
 
         // NEW ALERT
         (newAlert) => {
-          console.log(
-            '🆕 AppStore received NEW alert:',
-            newAlert
-          );
-
           setAlerts((current) => {
             const exists = current.some(
               (alert) => alert.id === newAlert.id
@@ -277,11 +234,6 @@ export function AppStoreProvider({
 
         // UPDATED ALERT
         (updatedAlert) => {
-          console.log(
-            '🔄 AppStore received UPDATED alert:',
-            updatedAlert
-          );
-
           setAlerts((current) =>
             current.map((alert) =>
               alert.id === updatedAlert.id
@@ -293,11 +245,6 @@ export function AppStoreProvider({
 
         // DELETED ALERT
         (deletedAlert) => {
-          console.log(
-            '🗑️ AppStore received DELETED alert:',
-            deletedAlert
-          );
-
           setAlerts((current) =>
             current.filter(
               (alert) => alert.id !== deletedAlert.id
@@ -312,7 +259,6 @@ export function AppStoreProvider({
         return;
       }
 
-      console.log('🛑 Stopping alert subscription');
       supabase.removeChannel(alertChannel);
       alertChannel = null;
     }
@@ -324,13 +270,7 @@ export function AppStoreProvider({
     const {
       data: { subscription: authSubscription },
     } = supabase.auth.onAuthStateChange((event, newSession) => {
-      console.log('🔐 AUTH STATE CHANGED:', event);
-
       if (event === 'SIGNED_IN' && newSession) {
-        console.log(
-          '✅ User signed in. Loading alerts now...'
-        );
-
         if (mounted) {
           setSession(newSession);
         }
@@ -349,10 +289,6 @@ export function AppStoreProvider({
       }
 
       if (event === 'SIGNED_OUT') {
-        console.log(
-          '🚪 User signed out. Clearing state.'
-        );
-
         if (mounted) {
           setSession(null);
           setUserRole(null);
@@ -393,10 +329,6 @@ export function AppStoreProvider({
     // ============================================
 
     return () => {
-      console.log(
-        '🧹 AppStoreProvider cleanup'
-      );
-
       mounted = false;
 
       authSubscription.unsubscribe();
@@ -412,7 +344,6 @@ export function AppStoreProvider({
     try {
       await signOutUser();
     } catch (error) {
-      console.log('❌ AppStore sign out error:', error);
       throw error;
     }
   }, []);

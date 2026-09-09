@@ -78,10 +78,6 @@ export async function signUp(
     );
   }
 
-  console.log(
-    '📝 Creating Supabase account...'
-  );
-
   const { data, error } =
     await supabase.auth.signUp({
       email: cleanEmail,
@@ -89,17 +85,8 @@ export async function signUp(
     });
 
   if (error) {
-    console.log(
-      '❌ Sign Up Error:',
-      error
-    );
-
     throw error;
   }
-
-  console.log(
-    '✅ Sign Up Successful'
-  );
 
   return data;
 }
@@ -118,10 +105,6 @@ export async function signIn(
     );
   }
 
-  console.log(
-    '🔐 Signing in to Supabase...'
-  );
-
   const { data, error } =
     await supabase.auth.signInWithPassword({
       email: cleanEmail,
@@ -129,17 +112,8 @@ export async function signIn(
     });
 
   if (error) {
-    console.log(
-      '❌ Sign In Error:',
-      error
-    );
-
     throw error;
   }
-
-  console.log(
-    '✅ Sign In Successful'
-  );
 
   return data;
 }
@@ -147,23 +121,12 @@ export async function signIn(
 // --------------------------------------------------------------------------
 
 export async function logOut() {
-  console.log('🚪 Logging out...');
-
   const { error } =
     await supabase.auth.signOut();
 
   if (error) {
-    console.log(
-      '❌ Logout Error:',
-      error
-    );
-
     throw error;
   }
-
-  console.log(
-    '✅ Logout Successful'
-  );
 }
 
 // --------------------------------------------------------------------------
@@ -175,11 +138,6 @@ export async function getCurrentUser() {
   } = await supabase.auth.getUser();
 
   if (error) {
-    console.log(
-      '❌ Get Current User Error:',
-      error
-    );
-
     throw error;
   }
 
@@ -193,11 +151,6 @@ export async function getCurrentSession() {
     await supabase.auth.getSession();
 
   if (error) {
-    console.log(
-      '❌ Get Current Session Error:',
-      error
-    );
-
     throw error;
   }
 
@@ -307,10 +260,6 @@ export function normalizeIncident(
 // --------------------------------------------------------------------------
 
 export async function fetchIncidentsFromDb() {
-  console.log(
-    '📥 Fetching incidents from Supabase...'
-  );
-
   const { data, error } =
     await supabase
       .from('incidents')
@@ -323,18 +272,8 @@ export async function fetchIncidentsFromDb() {
       );
 
   if (error) {
-    console.log(
-      '❌ Fetch Incidents Error:',
-      error
-    );
-
     throw error;
   }
-
-  console.log(
-    '✅ Incidents Fetched:',
-    data
-  );
 
   return (data || []).map(normalizeIncident);
 }
@@ -344,11 +283,6 @@ export async function fetchIncidentsFromDb() {
 // --------------------------------------------------------------------------
 
 export async function fetchAlertsFromDb() {
-  console.log('[DEBUG] Calling fetchAlertsFromDb');
-  console.log(
-    '📥 Fetching alerts from Supabase...'
-  );
-
   const { data, error } =
     await supabase
       .from('alerts')
@@ -356,18 +290,8 @@ export async function fetchAlertsFromDb() {
       .order('created_at', { ascending: false });
 
   if (error) {
-    console.log(
-      '❌ Fetch Alerts Error:',
-      error
-    );
-
     throw error;
   }
-
-  console.log(
-    '✅ Alerts Fetched:',
-    data
-  );
 
   return (data || []).map(normalizeAlert);
 }
@@ -450,11 +374,6 @@ export function subscribeToAlerts(
   onUpdate?: (alert: AlertItem) => void,
   onDelete?: (alert: AlertItem) => void
 ) {
-  console.log('[DEBUG] Calling subscribeToAlerts');
-  console.log(
-    `🔌 Starting Alerts Realtime Subscription: ${channelName}`
-  );
-
   const channel = supabase.channel(channelName);
 
   channel.on(
@@ -465,7 +384,6 @@ export function subscribeToAlerts(
       table: 'alerts',
     },
     (payload) => {
-      console.log('🟢 New Alert Received:', payload.new);
       onInsert(normalizeAlert(payload.new));
     }
   );
@@ -478,7 +396,6 @@ export function subscribeToAlerts(
       table: 'alerts',
     },
     (payload) => {
-      console.log('🔵 Alert Updated Through Realtime:', payload.new);
       if (onUpdate) {
         onUpdate(normalizeAlert(payload.new));
       }
@@ -493,16 +410,13 @@ export function subscribeToAlerts(
       table: 'alerts',
     },
     (payload) => {
-      console.log('🔴 Alert Deleted Through Realtime:', payload.old);
       if (onDelete) {
         onDelete(normalizeAlert(payload.old));
       }
     }
   );
 
-  channel.subscribe((status) => {
-    console.log(`${channelName}: ${status}`);
-  });
+  channel.subscribe();
 
   return channel;
 }
@@ -515,28 +429,6 @@ export async function updateIncident(
   id: string,
   updates: Record<string, unknown>
 ) {
-  console.log(
-    '=================================='
-  );
-
-  console.log(
-    '🔵 Updating Incident'
-  );
-
-  console.log(
-    'Incident ID:',
-    id
-  );
-
-  console.log(
-    'Updates:',
-    updates
-  );
-
-  console.log(
-    '=================================='
-  );
-
   if (!id) {
     throw new Error(
       'Incident ID is required.'
@@ -549,11 +441,6 @@ export async function updateIncident(
     updated_at:
       new Date().toISOString(),
   };
-
-  console.log(
-    '📤 Final Update:',
-    finalUpdates
-  );
 
   const {
     data,
@@ -569,38 +456,6 @@ export async function updateIncident(
   // --------------------------------------------------
 
   if (error) {
-    console.log(
-      '=================================='
-    );
-
-    console.log(
-      '❌ SUPABASE UPDATE ERROR'
-    );
-
-    console.log(
-      'Code:',
-      error.code
-    );
-
-    console.log(
-      'Message:',
-      error.message
-    );
-
-    console.log(
-      'Details:',
-      error.details
-    );
-
-    console.log(
-      'Hint:',
-      error.hint
-    );
-
-    console.log(
-      '=================================='
-    );
-
     throw error;
   }
 
@@ -609,39 +464,6 @@ export async function updateIncident(
   // --------------------------------------------------
 
   if (!data || data.length === 0) {
-    console.log(
-      '=================================='
-    );
-
-    console.log(
-      '❌ UPDATE AFFECTED 0 ROWS'
-    );
-
-    console.log(
-      'Possible causes:'
-    );
-
-    console.log(
-      '1. Supabase RLS UPDATE policy'
-    );
-
-    console.log(
-      '2. User does not have UPDATE permission'
-    );
-
-    console.log(
-      '3. Incident ID does not exist'
-    );
-
-    console.log(
-      'Incident ID:',
-      id
-    );
-
-    console.log(
-      '=================================='
-    );
-
     throw new Error(
       'Incident could not be updated. Check Supabase UPDATE permissions/RLS policies.'
     );
@@ -650,23 +472,6 @@ export async function updateIncident(
   // --------------------------------------------------
   // SUCCESS
   // --------------------------------------------------
-
-  console.log(
-    '=================================='
-  );
-
-  console.log(
-    '✅ INCIDENT UPDATED SUCCESSFULLY'
-  );
-
-  console.log(
-    'Updated Row:',
-    data[0]
-  );
-
-  console.log(
-    '=================================='
-  );
 
   return normalizeIncident(data[0]);
 }
@@ -678,11 +483,6 @@ export async function updateIncident(
 export async function deleteIncident(
   id: string
 ) {
-  console.log(
-    '🔴 Deleting Incident:',
-    id
-  );
-
   const { data, error } =
     await supabase
       .from('incidents')
@@ -691,11 +491,6 @@ export async function deleteIncident(
       .select('*');
 
   if (error) {
-    console.log(
-      '❌ Supabase Delete Error:',
-      error
-    );
-
     throw error;
   }
 
@@ -704,10 +499,6 @@ export async function deleteIncident(
       'Incident could not be deleted. Check Supabase DELETE permissions/RLS policies.'
     );
   }
-
-  console.log(
-    '✅ Incident Deleted Successfully'
-  );
 
   return data[0];
 }
@@ -740,9 +531,7 @@ export function subscribeToResponses(
     }
   });
 
-  channel.subscribe((status) => {
-    console.log(`${channelName}: ${status}`);
-  });
+  channel.subscribe();
 
   return channel;
 }
@@ -753,10 +542,6 @@ export function subscribeToIncidents(
   onUpdate?: (incident: Incident) => void,
   onDelete?: (incident: Incident) => void
 ) {
-  console.log(
-    `🔌 Starting Realtime Subscription: ${channelName}`
-  );
-
   const channel =
     supabase.channel(channelName);
 
@@ -772,11 +557,6 @@ export function subscribeToIncidents(
       table: 'incidents',
     },
     payload => {
-      console.log(
-        '🟢 New Incident Received:',
-        payload.new
-      );
-
       onInsert(normalizeIncident(payload.new));
     }
   );
@@ -793,11 +573,6 @@ export function subscribeToIncidents(
       table: 'incidents',
     },
     payload => {
-      console.log(
-        '🔵 Incident Updated Through Realtime:',
-        payload.new
-      );
-
       if (onUpdate) {
         onUpdate(normalizeIncident(payload.new));
       }
@@ -816,11 +591,6 @@ export function subscribeToIncidents(
       table: 'incidents',
     },
     payload => {
-      console.log(
-        '🔴 Incident Deleted Through Realtime:',
-        payload.old
-      );
-
       if (onDelete) {
         onDelete(normalizeIncident(payload.old));
       }
@@ -831,11 +601,7 @@ export function subscribeToIncidents(
   // SUBSCRIBE
   // ------------------------------------------------------------------------
 
-  channel.subscribe(status => {
-    console.log(
-      `${channelName}: ${status}`
-    );
-  });
+  channel.subscribe();
 
   return channel;
 }
@@ -845,15 +611,12 @@ export function subscribeToIncidents(
 // --------------------------------------------------------------------------
 
 export async function saveIncident(payload: Record<string, unknown>) {
-  console.log('📤 Saving incident to Supabase...', payload);
-
   const { data, error } = await supabase
     .from('incidents')
     .insert([payload])
     .select('*');
 
   if (error) {
-    console.log('❌ Save Incident Error:', error);
     throw error;
   }
 

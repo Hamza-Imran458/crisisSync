@@ -13,6 +13,20 @@ node_modules/
 *.log
 expo-export.log
 
+# Generated build and export output
+dist/
+mobile/dist/
+mobile/.expo-audit-export/
+mobile/test_results_output.txt
+android/app/build/
+android/build/
+android/app/debug.keystore
+mobile/android/app/build/
+mobile/android/build/
+
+# Local Supabase state
+supabase/.temp/
+
 # OS files
 .DS_Store
 Thumbs.db

@@ -1,7 +1,8 @@
 -- Phase 10: intended RLS policies for public.responses
 -- Review only. Do not execute against Supabase without explicit manual approval.
 
-create policy if not exists responses_select_admin_on_all
+drop policy if exists responses_select_admin_on_all on public.responses;
+create policy responses_select_admin_on_all
   on public.responses for select
   using (
     exists (
@@ -12,13 +13,15 @@ create policy if not exists responses_select_admin_on_all
     )
   );
 
-create policy if not exists responses_select_assigned_operator
+drop policy if exists responses_select_assigned_operator on public.responses;
+create policy responses_select_assigned_operator
   on public.responses for select
   using (
     assigned_to = auth.uid()
   );
 
-create policy if not exists responses_insert_admin
+drop policy if exists responses_insert_admin on public.responses;
+create policy responses_insert_admin
   on public.responses for insert
   with check (
     exists (
@@ -29,7 +32,8 @@ create policy if not exists responses_insert_admin
     )
   );
 
-create policy if not exists responses_update_admin
+drop policy if exists responses_update_admin on public.responses;
+create policy responses_update_admin
   on public.responses for update
   using (
     exists (
@@ -40,7 +44,8 @@ create policy if not exists responses_update_admin
     )
   );
 
-create policy if not exists responses_update_assigned_operator
+drop policy if exists responses_update_assigned_operator on public.responses;
+create policy responses_update_assigned_operator
   on public.responses for update
   using (
     assigned_to = auth.uid()
@@ -49,7 +54,8 @@ create policy if not exists responses_update_assigned_operator
     assigned_to = auth.uid()
   );
 
-create policy if not exists responses_delete_admin
+drop policy if exists responses_delete_admin on public.responses;
+create policy responses_delete_admin
   on public.responses for delete
   using (
     exists (

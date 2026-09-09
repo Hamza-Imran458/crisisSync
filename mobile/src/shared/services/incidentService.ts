@@ -23,7 +23,7 @@ export async function submitIncident(input: IncidentReportInput) {
     latitude: input.latitude,
     longitude: input.longitude,
     distance_km: input.distanceKm,
-    status: input.status ?? 'Pending',
+    status: input.status === 'Pending' ? 'PENDING_REVIEW' : input.status ?? 'PENDING_REVIEW',
   };
 
   if (session?.user?.id) {
